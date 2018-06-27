@@ -42,6 +42,7 @@
 
 #include "miner.h"
 #include "algos.h"
+#include "zenprotocol/zenprotocol_rpc.h"
 #include "sia/sia-rpc.h"
 #include "crypto/xmr-rpc.h"
 #include "equi/equihash.h"
@@ -1092,6 +1093,9 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		else if (opt_algo == ALGO_SIA) {
 			return sia_submit(curl, pool, work);
 		}
+		else if (opt_algo == ALGO_ZENPROTOCOL) {
+			return zenprotocol_submit(curl, pool, work);
+		}
 
 		if (opt_algo != ALGO_HEAVY && opt_algo != ALGO_MJOLLNIR) {
 			for (int i = 0; i < adata_sz; i++)
@@ -1278,7 +1282,18 @@ static bool get_upstream_work(CURL *curl, struct work *work)
 			return rc;
 		}
 		return rc;
-	}
+	} else if (opt_algo == ALGO_ZENPROTOCOL) {
+		char *zenprotocol_header = zenprotocol_getheader(curl, pool);
+		if (zenprotocol_header) {
+		        rc = zenprotocol_work_decode(zenprotocol_header, work);
+			free(zenprotocol_header);
+		}
+		gettimeofday(&tv_end, NULL);
+		if (have_stratum || unlikely(work->pooln != cur_pooln)) {
+			return rc;
+		}
+		return rc;
+        }
 
 	if (opt_debug_threads)
 		applog(LOG_DEBUG, "%s: want_longpoll=%d have_longpoll=%d",
@@ -1930,7 +1945,11 @@ static void *miner_thread(void *userdata)
 		} else if (opt_algo == ALGO_EQUIHASH) {
 			nonceptr = &work.data[EQNONCE_OFFSET]; // 27 is pool extranonce (256bits nonce space)
 			wcmplen = 4+32+32;
-		}
+		} else if (opt_algo = ALGO_ZENPROTOCOL) {
+		        nonceptr = &work.data[24];
+			wcmpoft = 0;
+			wcmplen = 84;
+                }
 
 		if (have_stratum) {
 			uint32_t sleeptime = 0;
@@ -2080,6 +2099,11 @@ static void *miner_thread(void *userdata)
 			// range max
 			nonceptr[0] = 0;
 			end_nonce = UINT32_MAX;
+		} else if (opt_algo == ALGO_ZENPROTOCOL) {
+			end_nonce = UINT32_MAX;
+                        work.data[21] = (thr_id + 1) << 7;
+                        work.data[22] = (thr_id + 1) << 6;
+                        work.data[23] = (thr_id + 1) << 5;
 		} else if (opt_benchmark) {
 			// randomize work
 			nonceptr[-1] += 1;
@@ -2258,6 +2282,7 @@ static void *miner_thread(void *userdata)
 			//case ALGO_WHIRLPOOLX:
 				minmax = 0x40000000U;
 				break;
+			case ALGO_ZENPROTOCOL:
 			case ALGO_KECCAK:
 			case ALGO_KECCAKC:
 			case ALGO_LBRY:
@@ -2568,6 +2593,9 @@ static void *miner_thread(void *userdata)
 		case ALGO_X17:
 			rc = scanhash_x17(thr_id, &work, max_nonce, &hashes_done);
 			break;
+		case ALGO_ZENPROTOCOL:
+			rc = scanhash_zenprotocol(thr_id, &work, max_nonce, &hashes_done);
+			break;
 		case ALGO_ZR5:
 			rc = scanhash_zr5(thr_id, &work, max_nonce, &hashes_done);
 			break;
@@ -2699,7 +2727,9 @@ static void *miner_thread(void *userdata)
 				gpu_led_percent(dev_id, 50);
 
 			work.submit_nonce_id = 0;
-			nonceptr[0] = work.nonces[0];
+			if (opt_algo == ALGO_ZENPROTOCOL) {
+			  nonceptr[0] = swab32(work.nonces[0]);
+			}
 			if (!submit_work(mythr, &work))
 				break;
 			nonceptr[0] = curnonce;
@@ -4045,7 +4075,8 @@ int main(int argc, char *argv[])
 	cur_pooln = pool_get_first_valid(0);
 	pool_switch(-1, cur_pooln);
 
-	if (opt_algo == ALGO_DECRED || opt_algo == ALGO_SIA) {
+	if (opt_algo == ALGO_DECRED || opt_algo == ALGO_SIA ||
+            opt_algo == ALGO_ZENPROTOCOL) {
 		allow_gbt = false;
 		allow_mininginfo = false;
 	}

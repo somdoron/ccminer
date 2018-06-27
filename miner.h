@@ -332,6 +332,7 @@ extern int scanhash_x15(int thr_id, struct work* work, uint32_t max_nonce, unsig
 extern int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
 extern int scanhash_x16s(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
 extern int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
+extern int scanhash_zenprotocol(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
 extern int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
 
 extern int scanhash_scrypt(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done,
@@ -720,7 +721,8 @@ struct tx {
 #define MAX_NONCES 2
 struct work {
 	uint32_t data[48];
-	uint32_t target[8];
+  //        size_t data_size;
+        uint32_t target[8];
 	uint32_t maxvote;
 
 	char job_id[128];

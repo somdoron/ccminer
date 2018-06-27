@@ -22,6 +22,8 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  ccminer.cpp pools.cpp util.cpp bench.cpp bignum.cpp \
 			  api.cpp hashlog.cpp nvml.cpp stats.cpp sysinfos.cpp cuda.cpp \
 			  nvsettings.cpp \
+			  zenprotocol/zenprotocol.cu zenprotocol/zenprotocol_rpc.cpp \
+		  	  zenprotocol/cuda_zenprotocol.cu  \
 			  equi/equi-stratum.cpp equi/equi.cpp equi/blake2/blake2bx.cpp \
 			  equi/equihash.cpp equi/cuda_equi.cu \
 			  heavy/heavy.cu \
@@ -104,6 +106,9 @@ ccminer_LDFLAGS  = $(PTHREAD_FLAGS) @CUDA_LDFLAGS@
 ccminer_LDADD    = @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@ @CUDA_LIBS@ @OPENMP_CFLAGS@ @LIBS@ $(nvml_libs)
 ccminer_CPPFLAGS = @LIBCURL_CPPFLAGS@ @OPENMP_CFLAGS@ $(CPPFLAGS) $(PTHREAD_FLAGS) -fno-strict-aliasing $(JANSSON_INCLUDES) $(DEF_INCLUDES) $(nvml_defs)
 
+ccminer_CPPFLAGS += -I/usr/local/include/
+ccminer_LDFLAGS += -L/usr/local/lib
+
 if HAVE_OSX
 ccminer_CPPFLAGS += -I/usr/local/llvm/lib/clang/4.0.0/include
 ccminer_LDFLAGS += -L/usr/local/llvm/lib
@@ -122,7 +127,7 @@ nvcc_ARCH += -gencode=arch=compute_50,code=\"sm_50,compute_50\"
 #nvcc_ARCH += -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 #nvcc_ARCH += -gencode=arch=compute_30,code=\"sm_30,compute_30\"
 
-nvcc_FLAGS = $(nvcc_ARCH) @CUDA_INCLUDES@ -I. @CUDA_CFLAGS@
+nvcc_FLAGS = $(nvcc_ARCH) -I/usr/local/include -L/usr/local/lib @CUDA_INCLUDES@ -I. @CUDA_CFLAGS@
 nvcc_FLAGS += $(JANSSON_INCLUDES) --ptxas-options="-v"
 
 # we're now targeting all major compute architectures within one binary.
