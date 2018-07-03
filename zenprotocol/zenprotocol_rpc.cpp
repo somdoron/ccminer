@@ -78,10 +78,7 @@ char* zenprotocol_getheader(CURL *curl, struct pool_infos *pool)
 	struct curl_slist *headers = NULL;
 	char data[256] = { 0 };
 	char url[512];
-http://18.188.166.129:31567/blockchain/blocktemplate");
-	// nanopool
-        //	snprintf(url, 512, "%s/miner/header?address=%s&worker=%s", //&longpoll
-        //		pool->url, pool->user, pool->pass);
+
         snprintf(url, 512, "%s/blockchain/blocktemplate", pool->url);
 
 	if (opt_protocol)
@@ -98,7 +95,6 @@ http://18.188.166.129:31567/blockchain/blocktemplate");
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, zenprotocol_data_cb);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &all_data);
 
-	headers = curl_slist_append(headers, "Host: 0.0.0.0:31567");
 	headers = curl_slist_append(headers, "Content-Type: application/json");
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
