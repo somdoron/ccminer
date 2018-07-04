@@ -1093,7 +1093,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		else if (opt_algo == ALGO_SIA) {
 			return sia_submit(curl, pool, work);
 		}
-		else if (opt_algo == ALGO_ZENPROTOCOL) {
+		else if (opt_algo == ALGO_ZENPROTOCOL && !have_stratum) {
 			return zenprotocol_submit(curl, pool, work);
 		}
 
@@ -1282,7 +1282,7 @@ static bool get_upstream_work(CURL *curl, struct work *work)
 			return rc;
 		}
 		return rc;
-	} else if (opt_algo == ALGO_ZENPROTOCOL) {
+	} else if (opt_algo == ALGO_ZENPROTOCOL && !have_stratum) {
 		char *zenprotocol_header = zenprotocol_getheader(curl, pool);
 		if (zenprotocol_header) {
 		        rc = zenprotocol_work_decode(zenprotocol_header, work);
@@ -4076,7 +4076,7 @@ int main(int argc, char *argv[])
 	pool_switch(-1, cur_pooln);
 
 	if (opt_algo == ALGO_DECRED || opt_algo == ALGO_SIA ||
-            opt_algo == ALGO_ZENPROTOCOL) {
+            (opt_algo == ALGO_ZENPROTOCOL && !have_stratum)) {
 		allow_gbt = false;
 		allow_mininginfo = false;
 	}
