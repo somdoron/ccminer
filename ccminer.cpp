@@ -2101,9 +2101,9 @@ static void *miner_thread(void *userdata)
 			end_nonce = UINT32_MAX;
 		} else if (opt_algo == ALGO_ZENPROTOCOL) {
 			end_nonce = UINT32_MAX;
-                        work.data[21] = (thr_id + 1) << 7;
-                        work.data[22] = (thr_id + 1) << 6;
-                        work.data[23] = (thr_id + 1) << 5;
+			work.data[21] = (rand() * (thr_id + 1));
+			work.data[22] = (rand() * (thr_id + 1));
+			work.data[22] = (rand() * (thr_id + 1));
 		} else if (opt_benchmark) {
 			// randomize work
 			nonceptr[-1] += 1;
