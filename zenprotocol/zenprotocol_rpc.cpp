@@ -193,9 +193,14 @@ bool zenprotocol_work_decode(const char *data, struct work *work)
 
 	uint32_t work_data[25];
 	hex2bin((uint8_t*)work_data, header, 100);
+
 	for (int i = 0; i < 25; ++i) {
 	  work->data[i] = work_data[i];
 	}
+
+	uint64_t timestamp = time(NULL) * 1000;
+	work->data[18] = swab32(timestamp >> 32);
+	work->data[19] = swab32(timestamp);
 
 	// use work ntime as job id
 	cbin2hex(work->job_id, (const char*)&work->data[18], 8);
@@ -242,7 +247,6 @@ bool zenprotocol_submit(CURL *curl, struct pool_infos *pool, struct work *work)
 	curl_easy_setopt(curl, CURLOPT_POST, 1);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
 
-	headers = curl_slist_append(headers, "Host: 0.0.0.0:31567");
 	headers = curl_slist_append(headers, "Content-Type: application/json");
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
