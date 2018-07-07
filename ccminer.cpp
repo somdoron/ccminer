@@ -2103,7 +2103,7 @@ static void *miner_thread(void *userdata)
 			end_nonce = UINT32_MAX;
 			work.data[21] = (rand() * (thr_id + 1));
 			work.data[22] = (rand() * (thr_id + 1));
-			work.data[22] = (rand() * (thr_id + 1));
+			work.data[23] = (rand() * (thr_id + 1));
 		} else if (opt_benchmark) {
 			// randomize work
 			nonceptr[-1] += 1;
