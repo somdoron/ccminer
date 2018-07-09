@@ -87,13 +87,14 @@ extern "C" int scanhash_zenprotocol(int thr_id, struct work* work, uint32_t max_
 		{
 			uint32_t _ALIGN(64) vhash[8];
 		        work->nonces[0] += start_nonce;
-			work->data[24] = swab32(work->nonces[0]);
+			work->data[24] = work->nonces[0];
 			zenprotocol_hash(vhash, work->data);
 
                         cudaMemset(d_resultNonce[thr_id], 0xFF, 2 * sizeof(uint32_t));
 			if (true) {
 			  work->valid_nonces = 1;
 			  work_set_target_ratio(work, vhash);
+			
 			  return 1;
 			} else {
 			  gpu_increment_reject(thr_id);

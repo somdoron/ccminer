@@ -234,11 +234,11 @@ __global__ void zenprotocol_gpu_hash_100(uint32_t threads, uint32_t startNonce, 
         for (int i = 0; i < 17; ++i) {
           state[i] = (((uint64_t*)c_PaddedMessage)[i]);
         }
-	((uint32_t*)state)[24] = cuda_swab32(nonce);
+	((uint32_t*)state)[24] = nonce;
 #if 0        
         printf("GPU INPUT 0\n");
-        for (int i = 0; i < 25; ++i) {
-          printf("%08x ", ((uint32_t*)state)[i]);
+        for (int i = 0; i < 17; ++i) {
+          printf("%08x", cuda_swab32(((uint32_t*)state)[i]));
         }
         printf("\n");
 #endif
@@ -250,25 +250,31 @@ __global__ void zenprotocol_gpu_hash_100(uint32_t threads, uint32_t startNonce, 
 
         keccak_block((uint32_t*)state);
 
-        if (cuda_swab32(LOWORD(state[0])) <= pTarget[0] &&
-            (cuda_swab32(HIWORD(state[0])) <= pTarget[1] || pTarget[1] == 0)) {
+        uint32_t h0 = cuda_swab32(LOWORD(state[0]));
+        uint32_t h1 = cuda_swab32(HIWORD(state[0]));
+
+        if ((h0 < pTarget[0]) || (h0 == pTarget[0] && h1 <= pTarget[1])) {
           uint32_t tmp = atomicExch(&resultNonce[0], thread);
           if (tmp != UINT32_MAX) {
             resultNonce[1] = tmp;
           }
 
-#if 0	  
+#if 0
           uint32_t pHash[8];
 #pragma unroll 4
           for (int i = 0; i < 4; ++i) {
-            pHash[2 * i] = (LOWORD(state[i]));
-            pHash[2 * i + 1] = (HIWORD(state[i]));
+            pHash[2 * i] = cuda_swab32(LOWORD(state[i]));
+            pHash[2 * i + 1] = cuda_swab32(HIWORD(state[i]));
           }
-         printf("GPU 100 HASH:\n");
-         for (int i = 0; i < 8; ++i) {
-           printf("%08x ", pHash[i]);
-         }
-         printf("\n");
+          printf("GPU 100 HASH:\n");
+          for (int i = 0; i < 8; ++i) {
+            printf("%08x", pHash[i]);
+          }
+          printf("\nGPU 100 Target:\n");
+          for (int i = 0; i < 8; ++i) {
+            printf("%08x", pTarget[i]);
+          }
+	  printf("\n");
 #endif
          }
 

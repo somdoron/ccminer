@@ -198,10 +198,6 @@ bool zenprotocol_work_decode(const char *data, struct work *work)
 	  work->data[i] = work_data[i];
 	}
 
-	uint64_t timestamp = time(NULL) * 1000;
-	work->data[18] = swab32(timestamp >> 32);
-	work->data[19] = swab32(timestamp);
-
 	// use work ntime as job id
 	cbin2hex(work->job_id, (const char*)&work->data[18], 8);
 	calc_network_diff(work);

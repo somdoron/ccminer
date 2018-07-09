@@ -2100,6 +2100,7 @@ static void *miner_thread(void *userdata)
 			nonceptr[0] = 0;
 			end_nonce = UINT32_MAX;
 		} else if (opt_algo == ALGO_ZENPROTOCOL) {
+                        nonceptr[0] = 0;
 			end_nonce = UINT32_MAX;
 			work.data[21] = (rand() * (thr_id + 1));
 			work.data[22] = (rand() * (thr_id + 1));
@@ -2727,9 +2728,7 @@ static void *miner_thread(void *userdata)
 				gpu_led_percent(dev_id, 50);
 
 			work.submit_nonce_id = 0;
-			if (opt_algo == ALGO_ZENPROTOCOL) {
-			  nonceptr[0] = swab32(work.nonces[0]);
-			}
+			nonceptr[0] = work.nonces[0];
 			if (!submit_work(mythr, &work))
 				break;
 			nonceptr[0] = curnonce;
